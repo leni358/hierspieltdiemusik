@@ -80,10 +80,19 @@ body {
 h1 {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(48px, 12vw, 72px);
+  font-size: clamp(42px, 10vw, 64px);
   line-height: .98;
   letter-spacing: -.045em;
   color: var(--lavender-deep);
+}
+
+.byline {
+  margin: 10px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--lavender-dark);
 }
 
 .card-number {
