@@ -72,11 +72,20 @@ body {
 
 .site-title {
   margin: 0;
+  color: var(--lavender-deep);
+}
+
+.site-title span {
+  display: block;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(38px, 9vw, 52px);
-  line-height: .98;
-  letter-spacing: -.035em;
-  color: var(--lavender-deep);
+  font-weight: 700;
+  line-height: .96;
+  letter-spacing: -.03em;
+}
+
+.site-title span + span {
+  margin-top: 2px;
 }
 
 .byline {
