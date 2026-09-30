@@ -33,3 +33,23 @@ TEST
 
 HINWEIS iPHONE / MOBILE
 Mobile Browser verlangen einen echten Fingertipp für Audiowiedergabe. Deshalb startet die Musik erst über den Button.
+
+
+NEU: INTEGRIERTER QR-SCANNER
+
+Die Website kann jetzt die Rückkamera direkt verwenden:
+1. Website öffnen.
+2. "Karte scannen" antippen.
+3. Beim ersten Mal Kamerazugriff erlauben.
+4. QR-Code in den Rahmen halten.
+5. Die Karte wird automatisch übernommen.
+6. "Song starten" drücken.
+7. Danach über "Nächste Karte scannen" direkt weiterspielen.
+
+Die vorhandenen gedruckten QR-Codes bleiben unverändert.
+
+Technik:
+- Kamera: Browser MediaDevices über html5-qrcode
+- QR-Erkennung: html5-qrcode
+- Bevorzugte Kamera: Rückkamera
+- Es werden nur QR-Codes dieser eigenen Website akzeptiert.

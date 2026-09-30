@@ -21,6 +21,11 @@
   const playLabel = document.getElementById("playLabel");
   const playIcon = document.getElementById("playIcon");
   const status = document.getElementById("status");
+  const scanButton = document.getElementById("scanButton");
+  const scanLabel = document.getElementById("scanLabel");
+  const scannerModal = document.getElementById("scannerModal");
+  const closeScannerButton = document.getElementById("closeScannerButton");
+  const scannerStatus = document.getElementById("scannerStatus");
 
   let cardId = "";
   let trackUri = "";
@@ -29,6 +34,9 @@
   let playerReady = false;
   let isPlaying = false;
   let songs = null;
+  let qrScanner = null;
+  let scannerRunning = false;
+  let scanLocked = false;
 
   function normalizeCardId(value) {
     const raw = (value || "").trim();
@@ -45,6 +53,164 @@
   function getCardIdFromUrl() {
     const params = new URLSearchParams(location.search);
     return normalizeCardId(params.get("id"));
+  }
+
+  function updateScanButton() {
+    scanLabel.textContent = cardId ? "Nächste Karte scannen" : "Karte scannen";
+  }
+
+  function extractCardIdFromQr(decodedText) {
+    const value = (decodedText || "").trim();
+    if (!value) return "";
+
+    if (/^\d{1,4}$/.test(value)) {
+      return normalizeCardId(value);
+    }
+
+    try {
+      const parsed = new URL(value);
+      const expected = new URL(REDIRECT_URI);
+
+      if (parsed.origin !== expected.origin) return "";
+      if (parsed.pathname.replace(/\/+$/, "/") !== expected.pathname.replace(/\/+$/, "/")) return "";
+
+      return normalizeCardId(parsed.searchParams.get("id"));
+    } catch (_) {
+      return "";
+    }
+  }
+
+  async function stopScanner() {
+    if (!qrScanner) return;
+
+    try {
+      if (scannerRunning) {
+        await qrScanner.stop();
+      }
+    } catch (_) {}
+
+    try {
+      qrScanner.clear();
+    } catch (_) {}
+
+    qrScanner = null;
+    scannerRunning = false;
+    scanLocked = false;
+  }
+
+  async function closeScanner() {
+    await stopScanner();
+    scannerModal.hidden = true;
+    document.body.classList.remove("scanner-open");
+  }
+
+  async function applyCard(newCardId) {
+    const normalized = normalizeCardId(newCardId);
+
+    if (!normalized || !songs || !songs[normalized]) {
+      throw new Error("Dieser QR-Code gehört zu keiner Karte dieses Spiels.");
+    }
+
+    if (player && isPlaying) {
+      try { await player.pause(); } catch (_) {}
+      isPlaying = false;
+    }
+
+    cardId = normalized;
+    sessionStorage.setItem(CARD_KEY, cardId);
+    history.replaceState(null, "", `${REDIRECT_URI}?id=${encodeURIComponent(cardId)}`);
+
+    const songUrl = songs[cardId];
+    trackUri = spotifyUrlToUri(songUrl);
+
+    if (!trackUri) {
+      throw new Error(`Für Karte #${cardId} ist kein gültiger Spotify-Song hinterlegt.`);
+    }
+
+    cardNumber.textContent = `Karte #${cardId}`;
+    updateScanButton();
+
+    const token = await getValidAccessToken();
+    if (!token) {
+      status.textContent = "Einmalig mit Spotify verbinden, danach spielt der Song direkt hier.";
+      setButton("Mit Spotify verbinden", "♫", false);
+      return;
+    }
+
+    if (playerReady) {
+      status.textContent = "Bereit. Titel und Interpret bleiben verborgen.";
+      setButton("Song starten", "▶", false);
+    } else {
+      await initializePlayer();
+    }
+  }
+
+  async function onQrDecoded(decodedText) {
+    if (scanLocked) return;
+    scanLocked = true;
+
+    const scannedId = extractCardIdFromQr(decodedText);
+
+    if (!scannedId) {
+      scannerStatus.textContent = "Das ist keine Karte aus „Hier spielt die Musik“.";
+      scanLocked = false;
+      return;
+    }
+
+    if (!songs?.[scannedId]) {
+      scannerStatus.textContent = `Karte #${scannedId} ist nicht in der Songliste enthalten.`;
+      scanLocked = false;
+      return;
+    }
+
+    scannerStatus.textContent = `Karte #${scannedId} erkannt.`;
+
+    try {
+      await stopScanner();
+      scannerModal.hidden = true;
+      document.body.classList.remove("scanner-open");
+      await applyCard(scannedId);
+    } catch (error) {
+      console.error(error);
+      scannerStatus.textContent = error?.message || "Die Karte konnte nicht geladen werden.";
+      scanLocked = false;
+    }
+  }
+
+  async function openScanner() {
+    if (typeof Html5Qrcode === "undefined") {
+      status.textContent = "Der QR-Scanner konnte nicht geladen werden.";
+      return;
+    }
+
+    scannerModal.hidden = false;
+    document.body.classList.add("scanner-open");
+    scannerStatus.textContent = "Kamera wird gestartet …";
+    scanLocked = false;
+
+    try {
+      qrScanner = new Html5Qrcode("qr-reader", {
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+      });
+
+      await qrScanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 230, height: 230 },
+          disableFlip: false
+        },
+        onQrDecoded,
+        () => {}
+      );
+
+      scannerRunning = true;
+      scannerStatus.textContent = "Halte den QR-Code der Karte in den Rahmen.";
+    } catch (error) {
+      console.error(error);
+      await stopScanner();
+      scannerStatus.textContent = "Kamera konnte nicht geöffnet werden. Erlaube bitte den Kamerazugriff für diese Website.";
+    }
   }
 
   function spotifyUrlToUri(url) {
@@ -403,6 +569,13 @@
   }
 
   async function boot() {
+    playButton.addEventListener("click", onMainButtonClick);
+    scanButton.addEventListener("click", openScanner);
+    closeScannerButton.addEventListener("click", closeScanner);
+    scannerModal.addEventListener("click", event => {
+      if (event.target === scannerModal) closeScanner();
+    });
+
     try {
       cardId = getCardIdFromUrl() || normalizeCardId(sessionStorage.getItem(CARD_KEY));
 
@@ -411,9 +584,19 @@
         cardId = getCardIdFromUrl() || normalizeCardId(sessionStorage.getItem(CARD_KEY));
       }
 
+      await loadSongs();
+      updateScanButton();
+
       if (!cardId) {
-        cardNumber.textContent = "Keine Karte erkannt";
-        status.textContent = "Bitte öffne diese Seite über den QR-Code einer Spielkarte.";
+        cardNumber.textContent = "Noch keine Karte";
+        status.textContent = "Tippe auf „Karte scannen“ und halte einen QR-Code vor die Kamera.";
+        setButton("Song starten", "▶", true);
+        return;
+      }
+
+      if (!songs[cardId]) {
+        cardNumber.textContent = "Karte nicht gefunden";
+        status.textContent = "Scanne bitte eine gültige Spielkarte.";
         setButton("Song starten", "▶", true);
         return;
       }
@@ -421,7 +604,6 @@
       sessionStorage.setItem(CARD_KEY, cardId);
       cardNumber.textContent = `Karte #${cardId}`;
 
-      await loadSongs();
       const songUrl = songs[cardId];
       trackUri = spotifyUrlToUri(songUrl);
 
@@ -430,8 +612,6 @@
         setButton("Song starten", "▶", true);
         return;
       }
-
-      playButton.addEventListener("click", onMainButtonClick);
 
       const token = await getValidAccessToken();
       if (!token) {
@@ -445,7 +625,6 @@
       console.error(error);
       status.textContent = error?.message || "Die Seite konnte nicht vollständig geladen werden.";
       setButton("Erneut versuchen", "↻", false);
-      playButton.addEventListener("click", onMainButtonClick);
     }
   }
 

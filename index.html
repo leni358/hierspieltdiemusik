@@ -26,9 +26,34 @@
         <span id="playLabel">Wird vorbereitet …</span>
       </button>
 
+      <button id="scanButton" class="scan-button" type="button">
+        <span class="scan-icon" aria-hidden="true">▦</span>
+        <span id="scanLabel">Karte scannen</span>
+      </button>
+
       <p id="status" class="status">Spotify-Player wird vorbereitet.</p>
     </section>
   </main>
+
+    <div id="scannerModal" class="scanner-modal" hidden aria-modal="true" role="dialog" aria-labelledby="scannerTitle">
+      <div class="scanner-panel">
+        <div class="scanner-head">
+          <div>
+            <p class="scanner-kicker">HIER SPIELT DIE MUSIK</p>
+            <h2 id="scannerTitle">Karte scannen</h2>
+          </div>
+          <button id="closeScannerButton" class="scanner-close" type="button" aria-label="Scanner schließen">×</button>
+        </div>
+
+        <div id="qr-reader" class="qr-reader"></div>
+
+        <p id="scannerStatus" class="scanner-status">
+          Halte den QR-Code der Karte in den Rahmen.
+        </p>
+      </div>
+    </div>
+
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="app.js" defer></script>
 </body>
 </html>
