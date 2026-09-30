@@ -1,41 +1,35 @@
-HIER SPIELT DIE MUSIK BY LENI – WEBSITE
-========================
+HIER SPIELT DIE MUSIK BY LENI – SPOTIFY WEB PLAYER
 
-INHALT
-- index.html   = Spieloberfläche
-- style.css    = Design
-- app.js       = liest die Karten-ID und öffnet den passenden Spotify-Song
-- songs.json   = Zuordnung Karte -> Spotify-Link für alle 1.192 Karten
-- 404.html     = einfache Rückleitung zur Startseite
+Diese Version spielt den Song direkt im Browser über den Spotify Web Playback SDK.
+Der QR-Code bleibt unverändert und verweist weiterhin auf:
+https://leni358.github.io/hierspieltdiemusik/?id=0001 usw.
 
-SO FUNKTIONIERT EIN QR-CODE
-Nach Veröffentlichung lautet ein Karten-Link z. B.:
-https://DEIN-NAME.github.io/DEIN-REPO/?id=0001
+SPOTIFY APP
+Client ID: c65a12efad33433c992d46e3e1c5f3ce
+Redirect URI: https://leni358.github.io/hierspieltdiemusik/
 
-Die Website zeigt KEINEN Interpret, Titel oder Jahr an.
-Erst nach dem Tippen auf "Song starten" wird der hinterlegte Spotify-Track geöffnet.
+WICHTIG
+- Kein Client Secret wird benötigt oder in der Website gespeichert.
+- Spotify Premium ist erforderlich.
+- Die Spotify Developer App ist im Development Mode: nur freigeschaltete Nutzer können sich anmelden.
+- Für eine Spielrunde reicht es, wenn das Handy des Spielleiters mit einem freigeschalteten Premium-Konto verbunden ist.
 
-KOSTENLOS MIT GITHUB PAGES VERÖFFENTLICHEN
-1. Bei github.com anmelden oder kostenloses Konto erstellen.
-2. Neues Repository anlegen, z. B. "leni-hitster".
-3. Die fünf Dateien aus diesem Ordner in das Repository hochladen.
-4. Repository öffnen -> Settings -> Pages.
-5. Unter "Build and deployment" auswählen:
-   Source: Deploy from a branch
-   Branch: main / (root)
-6. Save.
-7. Nach kurzer Zeit zeigt GitHub die öffentliche Adresse, z. B.:
-   https://deinname.github.io/leni-hitster/
+GITHUB-AKTUALISIERUNG
+1. ZIP entpacken.
+2. GitHub Repository 'hierspieltdiemusik' öffnen.
+3. Code > Add file > Upload files.
+4. Alle Dateien aus diesem Ordner hochladen und vorhandene Dateien überschreiben.
+5. Commit changes.
+6. 1–3 Minuten warten.
+7. Seite mit Strg+F5 neu laden.
 
-WICHTIG FÜR DIE ENDGÜLTIGEN QR-CODES
-Die endgültigen QR-Codes sollten NICHT direkt auf Spotify zeigen, sondern auf:
-https://deinname.github.io/leni-hitster/?id=0001
-https://deinname.github.io/leni-hitster/?id=0002
-...
+TEST
+1. Einen vorhandenen Karten-QR-Code scannen.
+2. Beim ersten Mal erscheint 'Mit Spotify verbinden'.
+3. Spotify-Zugriff bestätigen.
+4. Danach landet man wieder auf der Karte.
+5. 'Song starten' drücken.
+6. Der Song sollte direkt auf der Website abgespielt werden; Titel und Interpret werden nicht angezeigt.
 
-Sobald die tatsächliche GitHub-Pages-Adresse feststeht, können daraus automatisch
-alle 1.192 neuen QR-Codes und anschließend die endgültige Druck-PDF erzeugt werden.
-
-SONGS ÄNDERN
-Wenn später ein Song getauscht werden soll, muss nur die entsprechende Zeile in
-songs.json geändert werden. Der gedruckte QR-Code kann unverändert bleiben.
+HINWEIS iPHONE / MOBILE
+Mobile Browser verlangen einen echten Fingertipp für Audiowiedergabe. Deshalb startet die Musik erst über den Button.
